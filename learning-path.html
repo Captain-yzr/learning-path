@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>微夜的知识库 · 学习路径规划</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card: #1a1d27;
+      --card2: #20243a;
+      --border: #2a2d3e;
+      --border-hover: #3a3f5c;
+      --accent1: #6c63ff;
+      --accent2: #ff6b6b;
+      --accent3: #43e97b;
+      --accent4: #f7971e;
+      --accent5: #43b2e9;
+      --text: #e8eaf6;
+      --muted: #8890ab;
+      --tag: #252840;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'PingFang SC','Microsoft YaHei',sans-serif; min-height: 100vh; }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg,#1a1d27 0%,#252840 50%,#1a1d27 100%);
+      padding: 56px 24px 40px; text-align: center; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(108,99,255,.18),transparent);
+      pointer-events:none;
+    }
+    .hero-badge {
+      display:inline-block; background:rgba(108,99,255,.15); border:1px solid rgba(108,99,255,.4);
+      color:#a89eff; font-size:12px; padding:4px 14px; border-radius:20px; letter-spacing:1px; margin-bottom:18px;
+    }
+    .hero h1 {
+      font-size:clamp(24px,5vw,42px); font-weight:700;
+      background:linear-gradient(90deg,#a89eff,#6c63ff,#43b2e9);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.3;
+    }
+    .hero-sub { color:var(--muted); margin-top:12px; font-size:15px; }
+    .hero-stats { display:flex; justify-content:center; gap:32px; margin-top:32px; flex-wrap:wrap; }
+    .stat-item { text-align:center; }
+    .stat-num {
+      font-size:28px; font-weight:700;
+      background:linear-gradient(135deg,#6c63ff,#43b2e9);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .stat-label { color:var(--muted); font-size:12px; margin-top:4px; }
+
+    /* ── Progress bar ── */
+    .progress-bar { background:var(--card); border-bottom:1px solid var(--border); padding:12px 24px; position:sticky; top:0; z-index:100; }
+    .progress-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; gap:16px; }
+    .progress-text { font-size:12px; color:var(--muted); white-space:nowrap; }
+    .progress-track { flex:1; height:4px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .progress-fill { height:100%; background:linear-gradient(90deg,#6c63ff,#43b2e9); border-radius:4px; transition:width .4s ease; }
+    .progress-count { font-size:12px; color:#a89eff; white-space:nowrap; }
+
+    /* ── Layout ── */
+    .container { max-width:1100px; margin:0 auto; padding:32px 20px 64px; }
+    .section-header { display:flex; align-items:center; gap:12px; margin:40px 0 20px; }
+    .section-icon { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+    .section-header h2 { font-size:20px; font-weight:600; }
+    .section-header p { color:var(--muted); font-size:13px; margin-top:2px; }
+
+    /* ── Domain Cards (clickable) ── */
+    .knowledge-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-bottom:16px; }
+    .kb-domain {
+      background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 16px;
+      position:relative; overflow:hidden; transition:transform .2s,border-color .2s,box-shadow .2s;
+      cursor:pointer; user-select:none;
+    }
+    .kb-domain:hover { transform:translateY(-3px); border-color:var(--border-hover); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+    .kb-domain::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; border-radius:14px 14px 0 0; }
+    .d1::before{background:var(--accent1);} .d2::before{background:var(--accent2);}
+    .d3::before{background:var(--accent3);} .d4::before{background:var(--accent4);}
+    .d5::before{background:var(--accent5);}
+    .kb-domain .icon { font-size:28px; margin-bottom:10px; }
+    .kb-domain .name { font-size:15px; font-weight:600; margin-bottom:6px; }
+    .kb-domain .count { font-size:12px; color:var(--muted); background:rgba(255,255,255,.05); display:inline-block; padding:2px 8px; border-radius:10px; }
+    .kb-domain .desc { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.5; }
+    .kb-domain .arrow { position:absolute; top:16px; right:16px; font-size:16px; color:var(--muted); transition:transform .2s; }
+
+    /* ── Article Drawer (domain detail) ── */
+    .domain-drawer {
+      background:var(--card2); border:1px solid var(--border); border-radius:14px;
+      margin-bottom:14px; overflow:hidden; display:none;
+    }
+    .domain-drawer.open { display:block; }
+    .drawer-header {
+      padding:16px 20px; display:flex; align-items:center; gap:10px;
+      border-bottom:1px solid var(--border); cursor:pointer;
+    }
+    .drawer-header h3 { font-size:15px; font-weight:600; flex:1; }
+    .drawer-header .close-btn { color:var(--muted); font-size:20px; line-height:1; cursor:pointer; }
+    .article-list { padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+    .article-item {
+      display:flex; align-items:flex-start; gap:10px; padding:10px 12px;
+      background:rgba(255,255,255,.03); border:1px solid transparent;
+      border-radius:10px; cursor:pointer; text-decoration:none; color:inherit;
+      transition:background .15s,border-color .15s;
+    }
+    .article-item:hover { background:rgba(108,99,255,.08); border-color:rgba(108,99,255,.3); }
+    .article-type-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+    .article-info { flex:1; min-width:0; }
+    .article-title { font-size:13px; font-weight:500; line-height:1.5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .article-item:hover .article-title { white-space:normal; }
+    .article-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+    .atag { background:var(--tag); color:var(--muted); font-size:10px; padding:1px 6px; border-radius:8px; }
+    .article-link-icon { font-size:12px; color:var(--muted); flex-shrink:0; margin-top:3px; opacity:.6; }
+    .article-item[data-url=""] { cursor:default; opacity:.6; }
+    .article-item[data-url=""] .article-link-icon { display:none; }
+
+    /* ── Phase Timeline ── */
+    .phases { display:flex; flex-direction:column; gap:0; }
+    .phase-item { display:grid; grid-template-columns:120px 1fr; gap:0 24px; position:relative; }
+    .phase-item:not(:last-child)::after {
+      content:''; position:absolute; left:52px; top:56px; bottom:0; width:2px; background:var(--border);
+    }
+    .phase-left { display:flex; flex-direction:column; align-items:center; padding-top:20px; }
+    .phase-circle {
+      width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      font-size:18px;font-weight:700;flex-shrink:0;z-index:1;
+    }
+    .p1 .phase-circle{background:linear-gradient(135deg,#6c63ff,#a89eff);}
+    .p2 .phase-circle{background:linear-gradient(135deg,#43b2e9,#4fd1c5);}
+    .p3 .phase-circle{background:linear-gradient(135deg,#43e97b,#38f9d7);}
+    .p4 .phase-circle{background:linear-gradient(135deg,#f7971e,#ffd200);}
+    .phase-label { font-size:11px; color:var(--muted); margin-top:8px; text-align:center; }
+    .phase-content { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin:12px 0 28px; }
+    .phase-content h3 { font-size:16px; font-weight:600; margin-bottom:4px; }
+    .phase-content .phase-goal { color:var(--muted); font-size:13px; margin-bottom:14px; }
+
+    /* ── Topic Item (expandable) ── */
+    .topic-list { display:flex; flex-direction:column; gap:10px; }
+    .topic-item { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .topic-header { padding:12px 14px; cursor:pointer; display:flex; align-items:flex-start; gap:10px; transition:background .15s; }
+    .topic-header:hover { background:rgba(255,255,255,.04); }
+    .topic-num {
+      width:22px;height:22px;border-radius:6px;background:rgba(108,99,255,.2);color:#a89eff;
+      font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+    }
+    .topic-main { flex:1; }
+    .topic-title { font-size:14px; font-weight:500; line-height:1.4; }
+    .topic-meta { font-size:12px; color:var(--muted); margin-top:4px; }
+    .topic-toggle { color:var(--muted); font-size:18px; transition:transform .25s; flex-shrink:0; margin-top:-1px; }
+    .topic-item.open .topic-toggle { transform:rotate(180deg); }
+    .topic-body { display:none; padding:0 14px 14px 46px; }
+    .topic-item.open .topic-body { display:block; }
+    .topic-articles { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+
+    /* ── Quiz Section ── */
+    .quiz-section {
+      background:linear-gradient(135deg,rgba(108,99,255,.08),rgba(67,178,233,.06));
+      border:1px solid rgba(108,99,255,.2); border-radius:16px; padding:24px; margin-top:12px;
+    }
+    .quiz-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; cursor:pointer; }
+    .quiz-header h4 { font-size:15px; font-weight:600; flex:1; }
+    .quiz-badge {
+      background:rgba(108,99,255,.2); color:#a89eff; font-size:11px; padding:2px 8px;
+      border-radius:10px; white-space:nowrap;
+    }
+    .quiz-toggle { color:var(--muted); font-size:18px; transition:transform .25s; }
+    .quiz-body { display:none; }
+    .quiz-section.open .quiz-toggle { transform:rotate(180deg); }
+    .quiz-section.open .quiz-body { display:block; }
+    .quiz-list { display:flex; flex-direction:column; gap:14px; }
+    .quiz-item {
+      background:rgba(0,0,0,.2); border:1px solid var(--border); border-radius:12px; padding:16px;
+    }
+    .quiz-q { font-size:14px; font-weight:500; line-height:1.6; display:flex; gap:10px; }
+    .quiz-qnum {
+      width:24px;height:24px;border-radius:8px;background:rgba(108,99,255,.25);color:#a89eff;
+      font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+    }
+    .quiz-answer-area { margin-top:12px; }
+    .quiz-reveal-btn {
+      background:rgba(108,99,255,.15); border:1px solid rgba(108,99,255,.3); color:#a89eff;
+      font-size:12px; padding:5px 14px; border-radius:8px; cursor:pointer; transition:background .15s;
+      font-family:inherit;
+    }
+    .quiz-reveal-btn:hover { background:rgba(108,99,255,.25); }
+    .quiz-answer {
+      display:none; margin-top:10px; padding:12px; background:rgba(67,233,123,.06);
+      border:1px solid rgba(67,233,123,.2); border-radius:8px;
+    }
+    .quiz-answer.show { display:block; }
+    .quiz-answer p { font-size:13px; color:#9ef0c0; line-height:1.7; }
+    .self-check { margin-top:10px; display:flex; gap:8px; align-items:center; }
+    .check-label { font-size:12px; color:var(--muted); }
+    .check-btn {
+      padding:4px 12px; border-radius:8px; font-size:12px; cursor:pointer; border:1px solid;
+      font-family:inherit; transition:all .15s;
+    }
+    .check-yes { background:rgba(67,233,123,.1); border-color:rgba(67,233,123,.3); color:#43e97b; }
+    .check-yes:hover { background:rgba(67,233,123,.2); }
+    .check-no { background:rgba(255,107,107,.1); border-color:rgba(255,107,107,.3); color:#ff6b6b; }
+    .check-no:hover { background:rgba(255,107,107,.2); }
+    .check-btn.selected-yes { background:rgba(67,233,123,.3); border-color:#43e97b; }
+    .check-btn.selected-no { background:rgba(255,107,107,.3); border-color:#ff6b6b; }
+
+    /* ── Daily Tips ── */
+    .tips-box {
+      background:linear-gradient(135deg,rgba(108,99,255,.1),rgba(67,178,233,.08));
+      border:1px solid rgba(108,99,255,.25); border-radius:14px; padding:20px 24px; margin-top:40px;
+    }
+    .tips-box h3 { font-size:16px; font-weight:600; margin-bottom:12px; }
+    .tips-list { display:flex; flex-direction:column; gap:10px; }
+    .tip-item { display:flex; gap:10px; align-items:flex-start; }
+    .tip-dot { width:8px;height:8px;border-radius:50%;background:var(--accent1);flex-shrink:0;margin-top:6px; }
+    .tip-item p { font-size:13px; color:var(--muted); line-height:1.6; }
+    .tip-item strong { color:var(--text); }
+
+    /* ── Footer ── */
+    .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+
+    @media (max-width:600px) {
+      .phase-item { grid-template-columns:60px 1fr; gap:0 12px; }
+      .phase-item::after { left:29px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">📚 个人知识库 · 学习路径规划</div>
+  <h1>微夜的知识库</h1>
+  <p class="hero-sub">真正的信息大集合 · 系统化学习，让每一条知识都发挥价值</p>
+  <div class="hero-stats">
+    <div class="stat-item"><div class="stat-num">89</div><div class="stat-label">知识条目</div></div>
+    <div class="stat-item"><div class="stat-num">5</div><div class="stat-label">知识领域</div></div>
+    <div class="stat-item"><div class="stat-num">4</div><div class="stat-label">学习阶段</div></div>
+    <div class="stat-item"><div class="stat-num" id="masteredCount">0</div><div class="stat-label">已掌握问题</div></div>
+  </div>
+</div>
+
+<!-- Progress Bar -->
+<div class="progress-bar">
+  <div class="progress-inner">
+    <span class="progress-text">学习进度</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <span class="progress-count" id="progressText">0 / 26</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── 知识领域全景 ── -->
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(108,99,255,.15);">🗺️</div>
+    <div><h2>知识领域全景</h2><p>点击卡片展开该领域的所有文章，点击文章标题跳转阅读</p></div>
+  </div>
+
+  <div class="knowledge-grid">
+    <div class="kb-domain d2" onclick="toggleDomain('domain-parent')">
+      <div class="arrow">↓</div>
+      <div class="icon">👨‍👩‍👧</div>
+      <div class="name">育儿 · 教育</div>
+      <div class="count">约 55 条</div>
+      <div class="desc">育儿理念、亲子沟通、内驱力、情绪管理等核心议题</div>
+    </div>
+    <div class="kb-domain d1" onclick="toggleDomain('domain-ai')">
+      <div class="arrow">↓</div>
+      <div class="icon">🤖</div>
+      <div class="name">AI · 效率工具</div>
+      <div class="count">约 10 条</div>
+      <div class="desc">AI 使用方法论、Claude Code、DeepSeek 等前沿工具</div>
+    </div>
+    <div class="kb-domain d5" onclick="toggleDomain('domain-learn')">
+      <div class="arrow">↓</div>
+      <div class="icon">📖</div>
+      <div class="name">学习资源 · 自提升</div>
+      <div class="count">约 12 条</div>
+      <div class="desc">免费学习平台、书单推荐、副业渠道等成长资源</div>
+    </div>
+    <div class="kb-domain d4" onclick="toggleDomain('domain-life')">
+      <div class="arrow">↓</div>
+      <div class="icon">🌏</div>
+      <div class="name">生活技巧 · 认知</div>
+      <div class="count">约 8 条</div>
+      <div class="desc">买房避坑、语言认知、俗语辨析等实用智慧</div>
+    </div>
+    <div class="kb-domain d2" onclick="toggleDomain('domain-hike')">
+      <div class="arrow">↓</div>
+      <div class="icon">🥾</div>
+      <div class="name">户外 · 徒步</div>
+      <div class="count">约 7 条</div>
+      <div class="desc">重庆徒步装备清单与路线图片</div>
+    </div>
+  </div>
+
+  <!-- Domain Drawers -->
+  <div id="domain-parent" class="domain-drawer">
+    <div class="drawer-header" onclick="toggleDomain('domain-parent')">
+      <span style="font-size:20px">👨‍👩‍👧</span>
+      <h3>育儿 · 教育 — 全部文章</h3>
+      <span class="close-btn">×</span>
+    </div>
+    <div class="article-list">
+      <a class="article-item" href="chrome://note?docid=7458485562263059&media_id=note_6632d430f5b77fe9afa7a689780338a5_74584855622630597456350678311899" target="_blank" data-url="note">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">3步零消耗，让孩子主动远离手机</div>
+          <div class="article-tags"><span class="atag">#手机管控</span><span class="atag">#亲子沟通</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7457679056333459&media_id=note_6632d430f5b77fe9afa7a689780338a5_74576790563334597456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">被同学起外号、身材嘲讽｜高情商体面回怼完整方法论</div>
+          <div class="article-tags"><span class="atag">#反霸凌</span><span class="atag">#有效交流</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7456675996920051&media_id=note_6632d430f5b77fe9afa7a689780338a5_74566759969200517456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">助推理论拆解：不靠讲道理，用环境设计改变孩子行为</div>
+          <div class="article-tags"><span class="atag">#助推理论</span><span class="atag">#育儿理念</span><span class="atag">#自我管理</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455282368111454&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552823681114547456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">AI时代下教育体系的重构与革新</div>
+          <div class="article-tags"><span class="atag">#AI教育</span><span class="atag">#个性化学习</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455429604951975&media_id=note_6632d430f5b77fe9afa7a689780338a5_74554296049519757456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">允许父母不完美：学会向孩子示弱与情绪求助</div>
+          <div class="article-tags"><span class="atag">#育儿理念</span><span class="atag">#情绪管理</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455296096059404&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552960960594047456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">孩子为攒时间敷衍写作业？两套实用方案</div>
+          <div class="article-tags"><span class="atag">#学习方法</span><span class="atag">#亲子沟通</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455429072275194&media_id=note_6632d430f5b77fe9afa7a689780338a5_74554290722751947456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">低龄儿童手机使用三步科学管控实操全攻略</div>
+          <div class="article-tags"><span class="atag">#手机管控</span><span class="atag">#育儿技巧</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7456672268175331&media_id=note_6632d430f5b77fe9afa7a689780338a5_74566722681753317456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">精英家庭一日育儿作息拆解</div>
+          <div class="article-tags"><span class="atag">#通识教育</span><span class="atag">#STEM教育</span><span class="atag">#自驱力</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455297027196905&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552970271969057456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">孩子反问凭什么听你的？三层疆域法轻松化解亲子对抗</div>
+          <div class="article-tags"><span class="atag">#亲子沟通</span><span class="atag">#育儿技巧</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455297459220221&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552974592202217456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">周末拉开育儿差距 多巴胺熔断培养自驱型孩子</div>
+          <div class="article-tags"><span class="atag">#内驱力</span><span class="atag">#自驱力</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455290739944529&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552907399445297456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">情绪稳定的误区</div>
+          <div class="article-tags"><span class="atag">#情绪管理</span><span class="atag">#育儿理念</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/B5jangZh6YDXD33GHq1stg" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">上海爸爸"邪修养娃"爆红，砸钱雇女儿"自鸡"</div>
+          <div class="article-tags"><span class="atag">#内驱力</span><span class="atag">#育儿理念</span><span class="atag">#亲子沟通</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/xJWnpzmUWDRyGY2tfCNHQw" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">当孩子不想去上学的时候</div>
+          <div class="article-tags"><span class="atag">#抗挫力</span><span class="atag">#拒学</span><span class="atag">#育儿理念</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455299975801138&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552999758011387456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">先包办打样再适时退出 教会孩子自主时间管理与自驱力</div>
+          <div class="article-tags"><span class="atag">#时间管理</span><span class="atag">#自驱力</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455300986629542&media_id=note_6632d430f5b77fe9afa7a689780338a5_74553009866295427456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">反思听话式教育：工业化教育模式的时代困境与成长启示</div>
+          <div class="article-tags"><span class="atag">#育儿理念</span><span class="atag">#个性化学习</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455295500477659&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552955004776597456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">张雪峰离世反思（心理成长与育儿理念）</div>
+          <div class="article-tags"><span class="atag">#心理成长</span><span class="atag">#自我觉醒</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455427109349933&media_id=note_6632d430f5b77fe9afa7a689780338a5_74554271093499337456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">小学生益智数学思维游戏精准推荐</div>
+          <div class="article-tags"><span class="atag">#思维训练</span><span class="atag">#数学学习</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="domain-ai" class="domain-drawer">
+    <div class="drawer-header" onclick="toggleDomain('domain-ai')">
+      <span style="font-size:20px">🤖</span>
+      <h3>AI · 效率工具 — 全部文章</h3>
+      <span class="close-btn">×</span>
+    </div>
+    <div class="article-list">
+      <a class="article-item" href="chrome://note?docid=7458483649661989&media_id=note_6632d430f5b77fe9afa7a689780338a5_74584836496619897456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">7个步骤碾压90%普通人｜高阶AI使用完整方法论拆解</div>
+          <div class="article-tags"><span class="atag">#AI学习</span><span class="atag">#方法论</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://ccnk05wgo092.aiforce.cloud/spark/faas/app_4jdqh6vm3jpdp" target="_blank">
+        <span class="article-type-icon">🔗</span>
+        <div class="article-info">
+          <div class="article-title">Agent Skills指南 - 秋芝2046</div>
+          <div class="article-tags"><span class="atag">#AI学习</span><span class="atag">#Agent</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://my.feishu.cn/wiki/Takxwov60iO5OOkOmpEcpOGynac" target="_blank">
+        <span class="article-type-icon">🔗</span>
+        <div class="article-info">
+          <div class="article-title">Claude Code完全教程【视频文档】</div>
+          <div class="article-tags"><span class="atag">#ClaudeCode</span><span class="atag">#教程</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7457678045503955&media_id=note_6632d430f5b77fe9afa7a689780338a5_74576780455039557456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">AI协作12大范式深度拆解：把AI当思考资源，不只是当工具</div>
+          <div class="article-tags"><span class="atag">#AI学习</span><span class="atag">#协作范式</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/0Se4i8RHrtQc-wgGmUkfvw" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">全网最全！60分钟全面掌握Claude Code</div>
+          <div class="article-tags"><span class="atag">#ClaudeCode</span><span class="atag">#AI学习</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/NoMgV3mVcI2c_1_8VTG89A" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">女儿用AI整理错题，10分钟干完以前1小时的活</div>
+          <div class="article-tags"><span class="atag">#AI学习</span><span class="atag">#错题整理</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/2bfjUsErssvzXtnpX1RygQ" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">不用爬楼！微信聊天AI总结，包会的。</div>
+          <div class="article-tags"><span class="atag">#AI学习</span><span class="atag">#信息整理</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/nPSjkfHE4eC1cD3TATFMng" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">3步完成微信群聊消息整理，1分钟总结干货！</div>
+          <div class="article-tags"><span class="atag">#效率工具</span><span class="atag">#信息整理</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/WaHkAhODp9S9cy_we2PpbQ" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">DeepSeek实用资料大礼包！持续更新，建议收藏~</div>
+          <div class="article-tags"><span class="atag">#DeepSeek</span><span class="atag">#学习资源</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/xk3P_IjLkyUDiMzxPJD0xA" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">马斯克的xAI已开通网页版！目前免费！附详细教程</div>
+          <div class="article-tags"><span class="atag">#AI学习</span><span class="atag">#新工具</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="domain-learn" class="domain-drawer">
+    <div class="drawer-header" onclick="toggleDomain('domain-learn')">
+      <span style="font-size:20px">📖</span>
+      <h3>学习资源 · 自我提升 — 全部文章</h3>
+      <span class="close-btn">×</span>
+    </div>
+    <div class="article-list">
+      <a class="article-item" href="chrome://note?docid=7457679794523003&media_id=note_6632d430f5b77fe9afa7a689780338a5_74576797945230037456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">初中前必看28部纪录片</div>
+          <div class="article-tags"><span class="atag">#学习资源</span><span class="atag">#通识教育</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7456676374407625&media_id=note_6632d430f5b77fe9afa7a689780338a5_74566763744076257456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">停止精神内耗：免费学习平台+靠谱副业渠道全拆解</div>
+          <div class="article-tags"><span class="atag">#自我提升</span><span class="atag">#学习资源</span><span class="atag">#精神内耗</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455291767547352&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552917675473527456350678311899" target="_blank">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">学奥数的意义</div>
+          <div class="article-tags"><span class="atag">#思维培养</span><span class="atag">#学习方法</span><span class="atag">#数学</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/fab6e978a0eabe5da1235fb1811b38d1" target="_blank">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">学霸必备｜五种高效笔记法！</div>
+          <div class="article-tags"><span class="atag">#学习方法</span><span class="atag">#笔记法</span><span class="atag">#效率工具</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://www.smzdm.com/p/o5dmwd7v/" target="_blank">
+        <span class="article-type-icon">🔗</span>
+        <div class="article-info">
+          <div class="article-title">各专业学习网站汇总推荐｜语言在线学习网站</div>
+          <div class="article-tags"><span class="atag">#学习资源</span><span class="atag">#网站推荐</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7456675447621882" target="_blank" data-url="">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">高质量知识类视频收藏夹拆解：历史地缘科技人文全网干货清单</div>
+          <div class="article-tags"><span class="atag">#认知提升</span><span class="atag">#低成本学习</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="https://mp.weixin.qq.com/s/4gcYb3kLXV-y7FIW5MBkNA" target="_blank" data-url="">
+        <span class="article-type-icon">📰</span>
+        <div class="article-info">
+          <div class="article-title">4个官方免费平台，自学语言/职场技能/读书/编程</div>
+          <div class="article-tags"><span class="atag">#学习资源</span><span class="atag">#自我提升</span><span class="atag">#低成本</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="domain-life" class="domain-drawer">
+    <div class="drawer-header" onclick="toggleDomain('domain-life')">
+      <span style="font-size:20px">🌏</span>
+      <h3>生活技巧 · 认知 — 全部文章</h3>
+      <span class="close-btn">×</span>
+    </div>
+    <div class="article-list">
+      <a class="article-item" href="chrome://note?docid=7455868073486438" target="_blank" data-url="">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">二手房买房避坑全流程拆解：签约必查10大关键点</div>
+          <div class="article-tags"><span class="atag">#生活技巧</span><span class="atag">#避坑</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455679874513467" target="_blank" data-url="">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">车险避坑</div>
+          <div class="article-tags"><span class="atag">#生活技巧</span><span class="atag">#避坑</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455292752733527" target="_blank" data-url="">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">语言的边界即思想的边界</div>
+          <div class="article-tags"><span class="atag">#语言认知</span><span class="atag">#认知提升</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455292752733527" target="_blank" data-url="">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">被误传的民间俗语 / 又一批被严重曲解的俗语</div>
+          <div class="article-tags"><span class="atag">#语言认知</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455428212452635" target="_blank" data-url="">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">剖析欧式中文句式弊端、成因及滥用危害</div>
+          <div class="article-tags"><span class="atag">#语言认知</span><span class="atag">#写作技巧</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+      <a class="article-item" href="chrome://note?docid=7455292752733527" target="_blank" data-url="">
+        <span class="article-type-icon">📝</span>
+        <div class="article-info">
+          <div class="article-title">语义磨损</div>
+          <div class="article-tags"><span class="atag">#语言认知</span></div>
+        </div><span class="article-link-icon">↗</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="domain-hike" class="domain-drawer">
+    <div class="drawer-header" onclick="toggleDomain('domain-hike')">
+      <span style="font-size:20px">🥾</span>
+      <h3>户外 · 徒步 — 全部文章</h3>
+      <span class="close-btn">×</span>
+    </div>
+    <div class="article-list">
+      <div class="article-item" style="cursor:default">
+        <span class="article-type-icon">📄</span>
+        <div class="article-info">
+          <div class="article-title">【重庆一日徒步装备清单】（PDF）</div>
+          <div class="article-tags"><span class="atag">#徒步装备</span><span class="atag">#重庆</span></div>
+        </div>
+      </div>
+      <div class="article-item" style="cursor:default">
+        <span class="article-type-icon">🖼️</span>
+        <div class="article-info">
+          <div class="article-title">徒步路线图片 × 6张</div>
+          <div class="article-tags"><span class="atag">#路线规划</span><span class="atag">#实地参考</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 系统学习路径 ── -->
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(67,233,123,.15);">🛤️</div>
+    <div><h2>系统学习路径</h2><p>点击展开各步骤，可直接跳转阅读 + 自测掌握程度</p></div>
+  </div>
+
+  <div class="phases">
+
+    <!-- Phase 1 -->
+    <div class="phase-item p1">
+      <div class="phase-left">
+        <div class="phase-circle">1</div>
+        <div class="phase-label">第一阶段<br/>基础认知</div>
+      </div>
+      <div class="phase-content">
+        <h3>🌱 建立认知框架（1–2 周）</h3>
+        <p class="phase-goal">目标：打通育儿核心理念 + AI 基础认知，建立整体知识地图</p>
+        <div class="topic-list">
+
+          <!-- Topic 01 -->
+          <div class="topic-item" id="topic-01">
+            <div class="topic-header" onclick="toggleTopic('topic-01')">
+              <div class="topic-num">01</div>
+              <div class="topic-main">
+                <div class="topic-title">育儿理念奠基：读懂"不焦虑"的根本逻辑</div>
+                <div class="topic-meta">📂 微信收藏 · 育儿理念专题 · 4篇文章</div>
+              </div>
+              <span class="topic-toggle">⌄</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-articles">
+                <a class="article-item" href="chrome://note?docid=7455290739944529&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552907399445297456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">情绪稳定的误区</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455429604951975&media_id=note_6632d430f5b77fe9afa7a689780338a5_74554296049519757456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">允许父母不完美：学会向孩子示弱与情绪求助</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="https://mp.weixin.qq.com/s/xJWnpzmUWDRyGY2tfCNHQw" target="_blank">
+                  <span class="article-type-icon">📰</span>
+                  <div class="article-info"><div class="article-title">当孩子不想去上学的时候</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455300986629542&media_id=note_6632d430f5b77fe9afa7a689780338a5_74553009866295427456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">反思听话式教育：工业化教育模式的时代困境</div></div><span class="article-link-icon">↗</span>
+                </a>
+              </div>
+              <div class="quiz-section" id="quiz-01">
+                <div class="quiz-header" onclick="toggleQuiz('quiz-01')">
+                  <h4>🧠 自测题</h4>
+                  <span class="quiz-badge">3 道题</span>
+                  <span class="quiz-toggle">⌄</span>
+                </div>
+                <div class="quiz-body">
+                  <div class="quiz-list">
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q1</span><span>很多父母认为"情绪稳定"就是不生气、永远平静。这种理解有什么问题？正确的情绪稳定应该是什么？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>情绪稳定≠压抑情绪。强行压抑会造成内耗，且给孩子传递"情绪是不好的"信号。真正的情绪稳定是能够感受到情绪、命名情绪，并选择如何回应，而非自动反应。父母示弱、承认自己情绪不好，反而是健康示范。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q1-01')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q1-01')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q2</span><span>工业化教育模式的核心弊端是什么？它在哪些方面限制了孩子的发展？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>工业化教育追求标准化输出，用"听话、服从"培养可预测的工人。弊端：①压制孩子的个性化发展；②培养外驱力（奖惩驱动）而非内驱力；③忽视情感、创造力、批判性思维；④不适应AI时代对独立思考的需求。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q2-01')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q2-01')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q3</span><span>当孩子拒绝上学时，很多家长的第一反应是强迫或讲道理。知识库中提到了哪些更有效的应对策略？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>有效策略：①先倾听感受，不急于解决问题；②探索背后原因（被欺负？课业压力？社交困难？）；③暂时降低压力，给孩子喘息空间；④与老师协作；⑤避免把"上学"与亲子关系捆绑。强迫会加剧对立，讲道理在情绪激动时无效。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q3-01')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q3-01')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Topic 02 -->
+          <div class="topic-item" id="topic-02">
+            <div class="topic-header" onclick="toggleTopic('topic-02')">
+              <div class="topic-num">02</div>
+              <div class="topic-main">
+                <div class="topic-title">AI 使用入门：建立方法论认知</div>
+                <div class="topic-meta">📂 AI学习 · 方法论专题 · 3篇文章</div>
+              </div>
+              <span class="topic-toggle">⌄</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-articles">
+                <a class="article-item" href="chrome://note?docid=7458483649661989&media_id=note_6632d430f5b77fe9afa7a689780338a5_74584836496619897456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">7个步骤碾压90%普通人｜高阶AI使用完整方法论拆解</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7457678045503955&media_id=note_6632d430f5b77fe9afa7a689780338a5_74576780455039557456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">AI协作12大范式深度拆解：把AI当思考资源，不只是当工具</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="https://mp.weixin.qq.com/s/WaHkAhODp9S9cy_we2PpbQ" target="_blank">
+                  <span class="article-type-icon">📰</span>
+                  <div class="article-info"><div class="article-title">DeepSeek实用资料大礼包！</div></div><span class="article-link-icon">↗</span>
+                </a>
+              </div>
+              <div class="quiz-section" id="quiz-02">
+                <div class="quiz-header" onclick="toggleQuiz('quiz-02')">
+                  <h4>🧠 自测题</h4>
+                  <span class="quiz-badge">2 道题</span>
+                  <span class="quiz-toggle">⌄</span>
+                </div>
+                <div class="quiz-body">
+                  <div class="quiz-list">
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q1</span><span>文章提到了 AI 协作的 12 大范式。你能说出其中至少 5 个范式的名称或核心思路吗？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>核心范式包括：①角色扮演（让AI扮演专家）；②思维链（让AI一步步推理）；③提示词优化（迭代改进prompt）；④多轮对话（持续精炼输出）；⑤反向提问（让AI问你问题来澄清需求）；⑥结构化输出（要求特定格式）；⑦知识检索增强；⑧批评与修改；⑨对比多版本；⑩自动化工作流等。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q1-02')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q1-02')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q2</span><span>为什么说"把AI当工具"是低阶用法，"把AI当思考资源"才是高阶用法？二者的本质区别是什么？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>当工具=执行指令，你出题AI答题，AI是被动的。当思考资源=协作思考，你让AI质疑你的想法、补全你的盲区、帮你构建论点，你是在用AI放大自己的认知能力。高阶用法的核心是"人类主导思考方向，AI扩展思考深度和广度"。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q2-02')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q2-02')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase-item p2">
+      <div class="phase-left">
+        <div class="phase-circle">2</div>
+        <div class="phase-label">第二阶段<br/>核心技能</div>
+      </div>
+      <div class="phase-content">
+        <h3>🔧 掌握核心技能（2–4 周）</h3>
+        <p class="phase-goal">目标：深入亲子沟通技巧 + AI 工具实操 + 孩子学习方法论</p>
+        <div class="topic-list">
+
+          <!-- Topic 03 -->
+          <div class="topic-item" id="topic-03">
+            <div class="topic-header" onclick="toggleTopic('topic-03')">
+              <div class="topic-num">03</div>
+              <div class="topic-main">
+                <div class="topic-title">亲子沟通实战技巧</div>
+                <div class="topic-meta">📂 微信收藏 · 亲子沟通专题 · 5篇文章</div>
+              </div>
+              <span class="topic-toggle">⌄</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-articles">
+                <a class="article-item" href="chrome://note?docid=7455297027196905&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552970271969057456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">孩子反问凭什么听你的？三层疆域法轻松化解亲子对抗</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7457679056333459&media_id=note_6632d430f5b77fe9afa7a689780338a5_74576790563334597456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">被同学起外号｜高情商体面回怼完整方法论</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="https://mp.weixin.qq.com/s/B5jangZh6YDXD33GHq1stg" target="_blank">
+                  <span class="article-type-icon">📰</span>
+                  <div class="article-info"><div class="article-title">上海爸爸"邪修养娃"爆红，砸钱雇女儿"自鸡"</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455296096059404&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552960960594047456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">孩子为攒时间敷衍写作业？两套实用方案</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455429604951975&media_id=note_6632d430f5b77fe9afa7a689780338a5_74554296049519757456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">允许父母不完美：学会向孩子示弱与情绪求助</div></div><span class="article-link-icon">↗</span>
+                </a>
+              </div>
+              <div class="quiz-section" id="quiz-03">
+                <div class="quiz-header" onclick="toggleQuiz('quiz-03')">
+                  <h4>🧠 自测题</h4>
+                  <span class="quiz-badge">3 道题</span>
+                  <span class="quiz-toggle">⌄</span>
+                </div>
+                <div class="quiz-body">
+                  <div class="quiz-list">
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q1</span><span>什么是"三层疆域法"？面对孩子的对抗行为，三层疆域各自如何划定？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>三层疆域：①孩子自己的事（穿什么衣服、交什么朋友）→ 父母无权干涉；②共同商量的事（家庭规则、作业时间）→ 协商制定；③父母负责的事（安全底线、重大决定）→ 父母有权决定。冲突通常来自父母把第①层当作自己管辖范围，解法是归还孩子自主权。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q1-03')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q1-03')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q2</span><span>上海爸爸"雇女儿自鸡"的核心逻辑是什么？为什么这个方法有效？它背后运用了哪些心理学原理？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>核心逻辑：将外部动机转化为内在动机。通过"支付报酬"让孩子从被动接受变为主动选择，绕过了亲子权力对抗。心理学原理：①自我决定理论（自主感激发内驱力）；②行为设计（环境改变行为）；③去除奖惩的道德负担，变成契约关系。有效性在于孩子感受到被尊重和平等对待。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q2-03')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q2-03')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q3</span><span>孩子敷衍写作业的根源通常是什么？文章中的两套方案各自针对什么情况？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>根源：①把作业当任务完成（没有理解学习意义）；②为了抢时间玩。方案A：目标置换法——与孩子约定"做完作业就是自由时间"，培养效率意识；方案B：陪伴专注法——父母也在旁边做自己的"作业"（工作/阅读），营造专注氛围而非监督氛围。关键是改变场域，而非对抗。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q3-03')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q3-03')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Topic 04 -->
+          <div class="topic-item" id="topic-04">
+            <div class="topic-header" onclick="toggleTopic('topic-04')">
+              <div class="topic-num">04</div>
+              <div class="topic-main">
+                <div class="topic-title">AI 工具深度实操</div>
+                <div class="topic-meta">📂 AI学习 · 工具教程专题 · 4篇文章</div>
+              </div>
+              <span class="topic-toggle">⌄</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-articles">
+                <a class="article-item" href="https://mp.weixin.qq.com/s/0Se4i8RHrtQc-wgGmUkfvw" target="_blank">
+                  <span class="article-type-icon">📰</span>
+                  <div class="article-info"><div class="article-title">全网最全！60分钟全面掌握Claude Code</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="https://ccnk05wgo092.aiforce.cloud/spark/faas/app_4jdqh6vm3jpdp" target="_blank">
+                  <span class="article-type-icon">🔗</span>
+                  <div class="article-info"><div class="article-title">Agent Skills指南 - 秋芝2046</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="https://mp.weixin.qq.com/s/NoMgV3mVcI2c_1_8VTG89A" target="_blank">
+                  <span class="article-type-icon">📰</span>
+                  <div class="article-info"><div class="article-title">女儿用AI整理错题，10分钟干完1小时的活</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="https://mp.weixin.qq.com/s/2bfjUsErssvzXtnpX1RygQ" target="_blank">
+                  <span class="article-type-icon">📰</span>
+                  <div class="article-info"><div class="article-title">不用爬楼！微信聊天AI总结</div></div><span class="article-link-icon">↗</span>
+                </a>
+              </div>
+              <div class="quiz-section" id="quiz-04">
+                <div class="quiz-header" onclick="toggleQuiz('quiz-04')">
+                  <h4>🧠 自测题</h4>
+                  <span class="quiz-badge">2 道题</span>
+                  <span class="quiz-toggle">⌄</span>
+                </div>
+                <div class="quiz-body">
+                  <div class="quiz-list">
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q1</span><span>AI整理错题的核心流程是什么？用AI来做这件事，比传统方式的优势体现在哪里？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>核心流程：①拍照上传错题；②AI识别题目类型和错误；③AI分析错误原因（知识点缺漏 vs 粗心）；④生成归类整理（按知识点分类）；⑤AI出变式题巩固。优势：①速度快（1小时→10分钟）；②分类更准确（AI不主观）；③可以无限变式练习；④可随时查询同类型错题规律。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q1-04')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q1-04')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q2</span><span>如果你要今天就用AI总结微信聊天记录，需要哪几个步骤？大概能实现什么效果？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>步骤：①导出微信聊天记录（文字格式）；②上传到IMA或粘贴到AI对话框；③输入提示词"请总结这段对话的关键信息点/决策/待办事项"；④根据需要追问（"列出所有人名提到的事项"）。效果：可快速提取群聊中的核心决策、重要通知、待跟进事项，无需逐条阅读。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q2-04')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q2-04')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase-item p3">
+      <div class="phase-left">
+        <div class="phase-circle">3</div>
+        <div class="phase-label">第三阶段<br/>实践应用</div>
+      </div>
+      <div class="phase-content">
+        <h3>⚡ 实践与应用（4–8 周）</h3>
+        <p class="phase-goal">目标：将知识落地到日常育儿场景 + 用 AI 赋能学习和生活效率</p>
+        <div class="topic-list">
+
+          <!-- Topic 05 -->
+          <div class="topic-item" id="topic-05">
+            <div class="topic-header" onclick="toggleTopic('topic-05')">
+              <div class="topic-num">05</div>
+              <div class="topic-main">
+                <div class="topic-title">内驱力与自驱力培养实操</div>
+                <div class="topic-meta">📂 微信收藏 · 内驱力专题 · 4篇文章</div>
+              </div>
+              <span class="topic-toggle">⌄</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-articles">
+                <a class="article-item" href="chrome://note?docid=7456675996920051&media_id=note_6632d430f5b77fe9afa7a689780338a5_74566759969200517456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">助推理论拆解：用环境设计改变孩子行为</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455297459220221&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552974592202217456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">周末拉开育儿差距 多巴胺熔断培养自驱型孩子</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455299975801138&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552999758011387456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">先包办打样再适时退出 教会孩子自主时间管理</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7458485562263059&media_id=note_6632d430f5b77fe9afa7a689780338a5_74584855622630597456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">3步零消耗，让孩子主动远离手机</div></div><span class="article-link-icon">↗</span>
+                </a>
+              </div>
+              <div class="quiz-section" id="quiz-05">
+                <div class="quiz-header" onclick="toggleQuiz('quiz-05')">
+                  <h4>🧠 自测题</h4>
+                  <span class="quiz-badge">3 道题</span>
+                  <span class="quiz-toggle">⌄</span>
+                </div>
+                <div class="quiz-body">
+                  <div class="quiz-list">
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q1</span><span>什么是"多巴胺熔断"？为什么它是培养自驱力的关键？具体怎么操作？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>多巴胺熔断：主动切断高刺激活动（游戏/短视频），让大脑的多巴胺基线恢复正常，这样低刺激的活动（读书/学习）才能再次产生满足感。操作：①识别孩子的高多巴胺活动；②渐进式减少而非强行戒断；③替代方案（户外、运动、深度阅读）；④维持2-4周后学习的"无聊耐受度"显著提升。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q1-05')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q1-05')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q2</span><span>"助推理论"的核心思想是什么？给出 2 个可以在家庭中具体实施的助推设计案例。</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>核心思想：通过改变选择架构（environment design）来引导行为，而不是靠说教和强制。案例①：把书放在沙发旁边、把手机充电器放在卧室外——让读书变得顺手，让玩手机多一步障碍。案例②：把水果切好放在显眼位置，把零食放在难取到的地方——饮食习惯自然改变。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q2-05')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q2-05')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q3</span><span>"先包办打样"在培养孩子时间管理中的作用是什么？什么时候是"适时退出"的最佳时机？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>"先包办打样"：父母亲自示范完整流程（如制定每日计划表），让孩子看到如何做，而非空口说教。退出时机：①孩子已经理解了流程（能复述步骤）；②孩子开始尝试自己做（即使不完美）；③连续2-3次孩子主动发起某件事。过早退出=放弃；过晚退出=剥夺独立感。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q3-05')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q3-05')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Topic 06 -->
+          <div class="topic-item" id="topic-06">
+            <div class="topic-header" onclick="toggleTopic('topic-06')">
+              <div class="topic-num">06</div>
+              <div class="topic-main">
+                <div class="topic-title">语言认知与认知拓展</div>
+                <div class="topic-meta">📂 微信收藏 · 语言认知专题 · 4篇文章</div>
+              </div>
+              <span class="topic-toggle">⌄</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-articles">
+                <a class="article-item" href="chrome://note?docid=7455292752733527" target="_blank" data-url="">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">语言的边界即思想的边界</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455292752733527" target="_blank" data-url="">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">语义磨损</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455428212452635" target="_blank" data-url="">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">剖析欧式中文句式弊端、成因及滥用危害</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455679874513467" target="_blank" data-url="">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">被误传的民间俗语 / 又一批被严重曲解的俗语</div></div><span class="article-link-icon">↗</span>
+                </a>
+              </div>
+              <div class="quiz-section" id="quiz-06">
+                <div class="quiz-header" onclick="toggleQuiz('quiz-06')">
+                  <h4>🧠 自测题</h4>
+                  <span class="quiz-badge">2 道题</span>
+                  <span class="quiz-toggle">⌄</span>
+                </div>
+                <div class="quiz-body">
+                  <div class="quiz-list">
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q1</span><span>"语言的边界即思想的边界"这句话的含义是什么？对孩子的语言教育有什么实际启示？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>含义：你能精确表达的概念，就是你能清晰思考的范围。语言不够精确，思维就模糊。对孩子教育的启示：①重视词汇积累（会更多词→能描述更细腻的感受和想法）；②鼓励孩子精确描述（"不只是'好'，说说具体哪里好"）；③阅读是扩展语言边界最有效的方式；④多语言学习真的能拓宽思维维度。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q1-06')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q1-06')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q2</span><span>什么叫"语义磨损"？举 1-2 个日常生活中语义被磨损的典型例子。</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>语义磨损：一个词语因过度使用、滥用，原本的精确含义被稀释或扭曲，变成空洞的口头禅。例子①："我爱你"——被用于广告、营销、随口应付，原本深刻的情感表达变得廉价；例子②："震惊"/"绝了"——网络用语过度使用，真正震惊的事情也无法再引发应有的情绪共鸣。对写作的启示：慎用被磨损的词，寻找更精确的表达。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q2-06')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q2-06')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="phase-item p4">
+      <div class="phase-left">
+        <div class="phase-circle">4</div>
+        <div class="phase-label">第四阶段<br/>整合创新</div>
+      </div>
+      <div class="phase-content">
+        <h3>🚀 整合与创新（持续进行）</h3>
+        <p class="phase-goal">目标：构建「AI × 育儿」融合能力，形成个人知识体系</p>
+        <div class="topic-list">
+
+          <!-- Topic 07 -->
+          <div class="topic-item" id="topic-07">
+            <div class="topic-header" onclick="toggleTopic('topic-07')">
+              <div class="topic-num">07</div>
+              <div class="topic-main">
+                <div class="topic-title">AI 时代教育体系重构</div>
+                <div class="topic-meta">📂 微信收藏 · AI教育融合专题 · 3篇文章</div>
+              </div>
+              <span class="topic-toggle">⌄</span>
+            </div>
+            <div class="topic-body">
+              <div class="topic-articles">
+                <a class="article-item" href="chrome://note?docid=7455282368111454&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552823681114547456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">AI时代下教育体系的重构与革新</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455300986629542&media_id=note_6632d430f5b77fe9afa7a689780338a5_74553009866295427456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">反思听话式教育：工业化教育模式的时代困境</div></div><span class="article-link-icon">↗</span>
+                </a>
+                <a class="article-item" href="chrome://note?docid=7455295500477659&media_id=note_6632d430f5b77fe9afa7a689780338a5_74552955004776597456350678311899" target="_blank">
+                  <span class="article-type-icon">📝</span>
+                  <div class="article-info"><div class="article-title">张雪峰离世反思（心理成长与自我觉醒）</div></div><span class="article-link-icon">↗</span>
+                </a>
+              </div>
+              <div class="quiz-section" id="quiz-07">
+                <div class="quiz-header" onclick="toggleQuiz('quiz-07')">
+                  <h4>🧠 自测题</h4>
+                  <span class="quiz-badge">2 道题</span>
+                  <span class="quiz-toggle">⌄</span>
+                </div>
+                <div class="quiz-body">
+                  <div class="quiz-list">
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q1</span><span>在AI时代，传统教育体系需要在哪些维度上进行重构？作为家长，你可以在家庭教育中做哪些针对性的调整？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>需要重构的维度：①从记忆知识→理解和创造知识（AI替代了记忆）；②从标准答案→批判性思维（AI可生成答案，人要判断对错）；③从学科割裂→跨学科融合；④从个人竞争→人机协作能力。家长调整：①鼓励孩子质疑标准答案；②让孩子学会使用AI作为学习伙伴；③重视表达、创造、判断力的培养，而非仅仅是考试成绩。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q1-07')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q1-07')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="quiz-item">
+                      <div class="quiz-q"><span class="quiz-qnum">Q2</span><span>结合整个知识库的学习，你认为"育儿理念"和"AI工具使用"之间有哪些可以相互借鉴的地方？</span></div>
+                      <div class="quiz-answer-area">
+                        <button class="quiz-reveal-btn" onclick="revealAnswer(this)">查看参考答案</button>
+                        <div class="quiz-answer"><p>相互借鉴：①助推理论→用于AI提示词设计（设计好问题框架，让AI产出你想要的结果）；②内驱力培养→应用于自己的AI学习动机管理（为什么学，不只是因为别人说好）；③三层疆域法→在使用AI时：哪些事交给AI、哪些需要人机协商、哪些必须自己决定；④"先包办打样再退出"→教孩子用AI时，先示范、后放手，培养人机协作习惯。</p></div>
+                        <div class="self-check">
+                          <span class="check-label">我掌握了吗？</span>
+                          <button class="check-btn check-yes" onclick="markCheck(this,'yes','q2-07')">✓ 掌握</button>
+                          <button class="check-btn check-no" onclick="markCheck(this,'no','q2-07')">✗ 还需复习</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Tips ── -->
+  <div class="tips-box">
+    <h3>💡 高效利用本知识库的 5 个建议</h3>
+    <div class="tips-list">
+      <div class="tip-item"><div class="tip-dot"></div><p><strong>先点领域卡片：</strong>顶部的 5 个领域卡片可展开所有文章。建议先浏览一遍全部标题，再按学习路径逐步深入</p></div>
+      <div class="tip-item"><div class="tip-dot" style="background:var(--accent3)"></div><p><strong>自测题要认真做：</strong>每个模块的自测题是检验理解深度的关键，不要跳过。做完后用"✓掌握"或"✗复习"标记，进度条会实时更新</p></div>
+      <div class="tip-item"><div class="tip-dot" style="background:var(--accent4)"></div><p><strong>笔记类文章需在 IMA 客户端中打开：</strong>标有 📝 的笔记类链接是 chrome://note 协议，在 IMA 桌面客户端中可直接跳转，网页浏览器中无法打开</p></div>
+      <div class="tip-item"><div class="tip-dot" style="background:var(--accent5)"></div><p><strong>每周专注一个主题：</strong>89 条内容不要一次性消化，每周选 1 个学习模块深入研读，效果远好于泛读</p></div>
+      <div class="tip-item"><div class="tip-dot" style="background:var(--accent2)"></div><p><strong>AI × 育儿是你的核心优势：</strong>知识库最大的价值在于两个领域的交叉，学完后尝试用 AI 工具辅助育儿场景（整理聊天记录、生成育儿计划、分析孩子行为模式）</p></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>基于「微夜的知识库」89条内容 · 自动分析生成 · 2026年5月</p>
+    <p style="margin-top:6px;">知识的价值在于行动 · 愿你学有所用 🚀</p>
+  </div>
+
+</div>
+
+<script>
+// ── Domain drawer toggle ──
+function toggleDomain(id) {
+  const drawer = document.getElementById(id);
+  const isOpen = drawer.classList.contains('open');
+  document.querySelectorAll('.domain-drawer').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.kb-domain .arrow').forEach(a => a.textContent = '↓');
+  if (!isOpen) {
+    drawer.classList.add('open');
+    drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const map = { 'domain-parent': 0, 'domain-ai': 1, 'domain-learn': 2, 'domain-life': 3, 'domain-hike': 4 };
+    const idx = map[id];
+    if (idx !== undefined) {
+      const arrows = document.querySelectorAll('.kb-domain .arrow');
+      if (arrows[idx]) arrows[idx].textContent = '↑';
+    }
+  }
+}
+
+// ── Topic expand/collapse ──
+function toggleTopic(id) {
+  const item = document.getElementById(id);
+  item.classList.toggle('open');
+}
+
+// ── Quiz expand/collapse ──
+function toggleQuiz(id) {
+  const section = document.getElementById(id);
+  section.classList.toggle('open');
+}
+
+// ── Reveal answer ──
+function revealAnswer(btn) {
+  const answer = btn.nextElementSibling;
+  if (answer && answer.classList.contains('quiz-answer')) {
+    answer.classList.add('show');
+    btn.style.display = 'none';
+  }
+}
+
+// ── Self check tracking ──
+const TOTAL_QUESTIONS = 26;
+const mastered = new Set();
+const failed = new Set();
+
+function markCheck(btn, type, qid) {
+  const parent = btn.closest('.self-check');
+  parent.querySelectorAll('.check-btn').forEach(b => b.classList.remove('selected-yes', 'selected-no'));
+
+  if (type === 'yes') {
+    btn.classList.add('selected-yes');
+    mastered.add(qid);
+    failed.delete(qid);
+  } else {
+    btn.classList.add('selected-no');
+    failed.add(qid);
+    mastered.delete(qid);
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  const count = mastered.size;
+  const pct = Math.round((count / TOTAL_QUESTIONS) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = count + ' / ' + TOTAL_QUESTIONS;
+  document.getElementById('masteredCount').textContent = count;
+}
+</script>
+</body>
+</html>
